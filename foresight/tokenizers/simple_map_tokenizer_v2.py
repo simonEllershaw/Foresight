@@ -1,4 +1,3 @@
-import torch
 from pathlib import Path
 import json
 from typing import Iterable
@@ -42,7 +41,7 @@ class SimpleMapTokenizer():
             ids.append(id)
         return ids
 
-    def encode(self, tokens: list[str], return_tensors=False, device='cpu', skip_unknowns=False)-> dict[str, torch.Tensor|list[int]]:
+    def encode(self, tokens: list[str], skip_unknowns=False)-> dict[str, list[int]]:
         """Converts a list of tokens to input_ids and attention_mask. Handles OOV words by returning UNK token id or skipping."""
         input_ids = self.convert_tokens_to_ids(tokens, skip_unknowns)       
         if len(input_ids) > self._max_length:
@@ -52,28 +51,28 @@ class SimpleMapTokenizer():
         token_type_ids = [0 for _ in input_ids]
 
         return {
-            'input_ids': torch.tensor(input_ids).to(device) if return_tensors else input_ids,
-            'attention_mask': torch.tensor(attention_mask).to(device) if return_tensors else attention_mask,
-            'token_type_ids': torch.tensor(token_type_ids).to(device) if return_tensors else token_type_ids
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'token_type_ids': token_type_ids
         }
 
-    def __call__(self, tokens: list[str], return_tensors=False, device='cpu', skip_oov=False)-> dict[str, torch.Tensor|list[int]]:
-        """See encode()"""
-        return self.encode(tokens, return_tensors, device, skip_oov)
-    
-    
-    def batch_encode(self, batch: dict[str, list])->dict[str, list]:
+    def batch_encode(self, batch: dict[str, list], skip_unknowns=False)->dict[str, list]:
         """Batch version of encode() to be used with datasets.map()"""
-        batch["input_ids"] = []
-        batch["attention_mask"] = []
-        batch["token_type_ids"] = []
+        batch['input_ids'] = []
+        batch['attention_mask'] = []
+        batch['token_type_ids'] = []
+
         for example in batch['tokens']:
-            encoded = self.encode(example, return_tensors=True)
+            encoded = self.encode(example, skip_unknowns)
             batch["input_ids"].append(encoded["input_ids"])
             batch["attention_mask"].append(encoded["attention_mask"])
             batch["token_type_ids"].append(encoded["token_type_ids"])
-
+        
         return batch
+
+    def __call__(self, tokens: list[str], skip_unknowns=False)-> dict[str, list[int]]:
+        """See encode()"""
+        return self.encode(tokens, skip_unknowns)
 
 
     def save(self, directory: Path):
@@ -91,6 +90,6 @@ class SimpleMapTokenizer():
     @classmethod
     def from_vocab(cls, vocab: Iterable[str])-> 'SimpleMapTokenizer':
         full_vocab = set(vocab).union({cls.UNK_TOKEN, cls.PAD_TOKEN})
-        full_vocab = sorted(full_vocab)
+        full_vocab = sorted(list(full_vocab))
         id_to_token = {id: token for id, token in enumerate(full_vocab)}
         return cls(id_to_token)
