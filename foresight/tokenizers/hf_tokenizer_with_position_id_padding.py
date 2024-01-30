@@ -65,7 +65,7 @@ class PreTrainedTokenizerFastWithPositionIDPadding(PreTrainedTokenizerFast):
                 # HACK: Added position_ids code
                 if "position_ids" in encoded_inputs:
                     encoded_inputs["position_ids"] = (
-                        encoded_inputs["position_ids"] + [-1] * difference
+                        encoded_inputs["position_ids"] + [0] * difference
                     )
                 encoded_inputs[self.model_input_names[0]] = (
                     required_input + [self.pad_token_id] * difference
@@ -85,7 +85,7 @@ class PreTrainedTokenizerFastWithPositionIDPadding(PreTrainedTokenizerFast):
                     ] * difference + encoded_inputs["special_tokens_mask"]
                 # HACK: Added position_ids code
                 if "position_ids" in encoded_inputs:
-                    encoded_inputs["position_ids"] = [-1] * difference + encoded_inputs[
+                    encoded_inputs["position_ids"] = [0] * difference + encoded_inputs[
                         "position_ids"
                     ]
                 encoded_inputs[self.model_input_names[0]] = [
