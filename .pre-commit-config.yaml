@@ -25,10 +25,11 @@ repos:
   - repo: https://github.com/nbQA-dev/nbQA
     rev: 1.7.0
     hooks:
-      - id: nbqa-black
-        additional_dependencies: [black==23.1.0]
       - id: nbqa-isort
         additional_dependencies: [isort==5.12.0]
+        args: [--profile=black]
+      - id: nbqa-black
+        additional_dependencies: [black==23.1.0]
       - id: nbqa
         entry: nbqa autoflake -i
         name: nbqa-autoflake
@@ -38,15 +39,16 @@ repos:
         additional_dependencies: [flake8==6.0.0]
       - id: nbqa-mypy
         additional_dependencies: [mypy==1.3.0]
-  - repo: https://github.com/psf/black
-    rev: 23.1.0
-    hooks:
-      - id: black
   - repo: https://github.com/pycqa/isort
     rev: 5.12.0
     hooks:
       - id: isort
         name: isort (python)
+        args: ["--profile", "black"]
+  - repo: https://github.com/psf/black
+    rev: 23.1.0
+    hooks:
+      - id: black
   - repo: https://github.com/PyCQA/autoflake
     rev: v2.2.0
     hooks:
