@@ -11,12 +11,14 @@ class SimpleMapTokenizer:
     UNK_TOKEN = "<UNK>"
     PAD_TOKEN = "<PAD>"
 
-    ID_TO_TOKEN_FILENAME = "id_to_token.json"
+    VOCAB_FILENAME = "vocab.json"
     PARAMS_FILENAME = "params.json"
 
-    def __init__(self, id_to_token: dict[int, str], max_length=100):
-        self._id_to_token = id_to_token
+    def __init__(self, vocab: Iterable[str], max_length=100):
+        self._vocab = sorted(set(vocab).union({self.UNK_TOKEN, self.PAD_TOKEN}))
+        self._id_to_token = {id: token for id, token in enumerate(self._vocab)}
         self._token_to_id = {token: id for id, token in self._id_to_token.items()}
+
         self._max_length = max_length
 
         self._unk_token_id = self._token_to_id[self.UNK_TOKEN]
@@ -86,24 +88,13 @@ class SimpleMapTokenizer:
 
     def save(self, directory: Path):
         directory.mkdir(parents=True, exist_ok=True)
-        (directory / self.ID_TO_TOKEN_FILENAME).write_text(
-            json.dumps(self._id_to_token, indent=2)
-        )
+        (directory / self.VOCAB_FILENAME).write_text(json.dumps(self._vocab, indent=2))
         (directory / self.PARAMS_FILENAME).write_text(
             json.dumps({"max_length": self._max_length}, indent=2)
         )
 
     @classmethod
     def load(cls, directory: Path) -> "SimpleMapTokenizer":
-        id_to_token_json = json.loads(
-            (directory / cls.ID_TO_TOKEN_FILENAME).read_text()
-        )
-        id_to_token = {int(id): token for id, token in id_to_token_json.items()}
+        vocab = json.loads((directory / cls.VOCAB_FILENAME).read_text())
         params = json.loads((directory / cls.PARAMS_FILENAME).read_text())
-        return cls(id_to_token, **params)
-
-    @classmethod
-    def from_vocab(cls, vocab: Iterable[str]) -> "SimpleMapTokenizer":
-        full_vocab = set(vocab).union({cls.UNK_TOKEN, cls.PAD_TOKEN})
-        id_to_token = {id: token for id, token in enumerate(sorted(full_vocab))}
-        return cls(id_to_token)
+        return cls(vocab, **params)
