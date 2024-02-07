@@ -119,8 +119,9 @@ class TimelineMetrics:
         # Compute weighted average
         for metric in batch_metrics:
             batch_metrics[metric] /= total_num_samples
+        batch_metrics["num_samples"] = total_num_samples
 
-        return batch_metrics
+        return dict(batch_metrics)
 
 
 # from foresight.tokenizers import PreTrainedTokenizerFastWithPositionIDPadding
